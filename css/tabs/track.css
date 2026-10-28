@@ -1,0 +1,31 @@
+/* Track record tab */
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--desk-navy); color: #fff; border-radius: var(--radius-m); }
+.stat { padding: 1.1rem 1.4rem; }
+.stat + .stat { border-left: 1px solid rgba(255, 255, 255, .16); }
+.stat-big { font-size: var(--fs-xxl); font-weight: 850; font-stretch: 75%; line-height: 1; }
+.stat-label { font-size: var(--fs-s); color: #cfd5f6; margin-top: .3rem; }
+.track { margin-top: 2.5rem; }
+.segmented.years button { padding: .45rem .7rem; }
+.track-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: var(--gap-l); align-items: start; }
+.scatter { position: relative; background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius-m); padding: .5rem; }
+.scatter svg { display: block; width: 100%; height: auto; }
+.scatter .diag { stroke: var(--ink-soft); stroke-dasharray: 4 4; }
+.scatter circle.hit { fill: var(--desk-navy); fill-opacity: .8; }
+.scatter circle.miss { fill: var(--spike-gold); stroke: var(--desk-navy); stroke-width: 1.5; }
+.scatter .tick text, .house-seats .tick text { fill: var(--ink-soft); font-family: var(--f-display); }
+.scatter .ax-title { fill: var(--ink-soft); font-size: 12px; }
+.scatter-tip { position: absolute; background: var(--desk-navy); color: #fff; font-size: var(--fs-xs); padding: .3rem .5rem; border-radius: var(--radius-s); pointer-events: none; white-space: nowrap; }
+.track-line { margin-top: 0; font-weight: 650; }
+.house-seats { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius-m); padding: 1rem; max-width: 760px; }
+.house-seats svg { display: block; width: 100%; height: auto; }
+.house-seats .range-bar { fill: var(--d-lean); }
+.house-seats .pred-line { stroke: var(--desk-navy); stroke-width: 3; }
+.house-seats .actual-dot { fill: var(--spike-gold); stroke: var(--desk-navy); stroke-width: 1.5; }
+.house-seats .maj-line { stroke: var(--spike-gold); stroke-dasharray: 5 4; stroke-width: 1.5; }
+.house-seats .maj-text { fill: #a26a00; font-size: 11px; font-weight: 700; }
+.k-range { background: var(--d-lean); } .k-pred { background: var(--desk-navy); height: 3px !important; } .k-actual { background: var(--spike-gold); border-radius: 50% !important; }
+@media (max-width: 860px) {
+  .stats { grid-template-columns: 1fr; }
+  .stat + .stat { border-left: 0; border-top: 1px solid rgba(255, 255, 255, .16); }
+  .track-grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,5 @@
+/* Text pages: How it works, Data sources */
+.prose { max-width: 40rem; margin: var(--gap-l) 0; font-family: var(--f-text); font-size: 1.08rem; line-height: 1.65; }
+.prose h1 { font-family: var(--f-display); font-size: var(--fs-xxl); font-stretch: 85%; font-weight: 800; line-height: 1.05; margin: 0 0 1rem; }
+.prose h2 { font-family: var(--f-display); font-size: var(--fs-xl); font-stretch: 85%; font-weight: 750; margin: 2rem 0 .5rem; }
+.prose img { max-width: 100%; height: auto; }

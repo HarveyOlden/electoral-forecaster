@@ -1,0 +1,134 @@
+/* Reusable pieces: the desk, chamber readouts, bars, map frame, side panel, mascot, buttons, tables. */
+
+/* ---------- the desk: navy band with the anchor dragon and the chamber readouts ---------- */
+.desk {
+  position: relative; margin-top: var(--gap-l); background: var(--desk-navy); color: #fff; border-radius: var(--radius-m);
+  display: grid; grid-template-columns: 210px 1fr; min-height: 260px; overflow: hidden;
+}
+.desk::after { /* the desk's front edge */
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 10px; background: var(--desk-navy-2);
+  border-top: 2px solid var(--spike-gold);
+}
+.anchor { position: relative; align-self: end; height: 100%; }
+.anchor img { position: absolute; left: 14px; bottom: 0; height: 245px; width: auto; }
+.anchor img.face-right { transform: scaleX(-1); }   /* faces the numbers and points at them (config: mascot.anchorFacesRight) */
+.readouts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 1.4rem 1.4rem 2rem 0; gap: 0; }
+.readout { padding: 0 1.25rem; border-left: 1px solid rgba(255, 255, 255, .16); min-width: 0; }
+.readout h2 { margin: 0; font-size: var(--fs-l); font-stretch: 80%; font-weight: 700; color: #cfd5f6; }
+.readout .big { font-size: var(--fs-hero); font-weight: 850; font-stretch: 75%; line-height: 1; margin: .35rem 0 0; }
+.readout .big small { display: block; font-size: var(--fs-s); font-weight: 600; font-stretch: 95%; color: #cfd5f6; margin-top: .3rem; line-height: 1.3; }
+.readout .sub { font-size: var(--fs-s); color: #cfd5f6; margin: .35rem 0 0; }
+.readout .note { font-size: var(--fs-xs); color: #9aa3d6; margin-top: .5rem; }
+
+/* horizontal probability bar: Dem share of the bar = P(Dem majority) */
+.pbar { display: flex; height: 26px; border-radius: var(--radius-s); overflow: hidden; margin-top: .6rem; background: var(--rep); }
+.pbar span { display: flex; align-items: center; font-size: var(--fs-xs); font-weight: 700; padding: 0 .45rem; white-space: nowrap; }
+.pbar .d { background: var(--dem); }
+.pbar .r { background: var(--rep); flex: 1; justify-content: flex-end; }
+.pbar-legend { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: #cfd5f6; margin-top: .25rem; }
+
+/* seat distribution: one bar per possible seat count, Dem-majority side in blue */
+.seathist { margin-top: .9rem; }
+.seathist svg { display: block; width: 100%; height: 56px; overflow: visible; }
+.seathist .maj line { stroke: var(--spike-gold); stroke-width: 2; }
+.seathist .maj text { fill: var(--spike-gold); font-size: 11px; font-weight: 700; }
+.seathist .axis text { fill: #9aa3d6; font-size: 10px; }
+
+/* ---------- map ---------- */
+.map-section { position: relative; margin-top: 3.2rem; }
+.map-toolbar { display: flex; align-items: center; gap: var(--gap); flex-wrap: wrap; margin-bottom: .6rem; }
+.map-toolbar h2 { margin: 0; font-size: var(--fs-xl); font-stretch: 85%; font-weight: 800; }
+.segmented { display: inline-flex; border: 1.5px solid var(--desk-navy); border-radius: var(--radius-m); overflow: hidden; }
+.segmented button {
+  font: inherit; font-weight: 650; font-stretch: 90%; border: 0; background: var(--card); color: var(--desk-navy);
+  padding: .45rem 1rem; cursor: pointer;
+}
+.segmented button + button { border-left: 1.5px solid var(--desk-navy); }
+.segmented button[aria-pressed="true"] { background: var(--desk-navy); color: #fff; }
+.finder select { font: inherit; padding: .4rem .5rem; border: 1.5px solid var(--rule); border-radius: var(--radius-s); background: var(--card); color: var(--ink); max-width: 16rem; }
+
+.map-frame { position: relative; background: var(--card); border: 2px solid var(--desk-navy); border-radius: var(--radius-m); padding: 1rem; }
+.map-frame svg { display: block; width: 100%; height: auto; }
+.map-frame .unit { cursor: pointer; stroke: #fff; stroke-width: .8; }
+.map-frame .unit.none { cursor: default; fill: var(--muted-fill); }
+.map-frame .unit:hover:not(.none) { stroke: var(--desk-navy); stroke-width: 1.6; }
+.map-frame .unit.selected { stroke: var(--pointer); stroke-width: 3; }
+.map-frame .hex-label { font-size: 9px; font-weight: 700; fill: var(--desk-navy); pointer-events: none; paint-order: stroke; stroke: rgba(255, 255, 255, .85); stroke-width: 2.5px; }
+.legend { display: flex; flex-wrap: wrap; gap: .25rem .9rem; font-size: var(--fs-xs); color: var(--ink-soft); margin-top: .7rem; }
+.legend span { display: inline-flex; align-items: center; gap: .35rem; }
+.legend i { width: .9rem; height: .9rem; border-radius: 2px; display: inline-block; }
+
+.tooltip {
+  position: fixed; pointer-events: none; z-index: 40; background: var(--desk-navy); color: #fff; padding: .4rem .6rem;
+  border-radius: var(--radius-s); font-size: var(--fs-s); box-shadow: 0 6px 16px rgba(18, 25, 75, .25); max-width: 16rem;
+}
+.tooltip b { display: block; font-stretch: 90%; }
+
+/* the dragon peeking over the map frame (top right) */
+.peek { position: absolute; right: 48px; top: -84px; width: 112px; height: 84px; overflow: hidden; pointer-events: none; z-index: 2; }
+.peek img { position: absolute; left: 0; top: 0; width: 112px; height: auto; }
+
+/* ---------- side panel: one race ---------- */
+.panel-scrim { position: fixed; inset: 0; background: rgba(18, 25, 75, .18); z-index: 30; }
+.panel {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(430px, 100%); background: var(--card); z-index: 31;
+  box-shadow: var(--shadow-panel); overflow-y: auto; padding: 1.25rem 1.4rem 2rem; border-left: 6px solid var(--desk-navy);
+  transform: translateX(0); transition: transform .22s ease-out;
+}
+.panel[hidden], .panel-scrim[hidden] { display: none; }
+.panel-close {
+  position: absolute; top: .9rem; right: .9rem; width: 2.2rem; height: 2.2rem; border-radius: 50%; border: 1.5px solid var(--rule);
+  background: var(--card); color: var(--ink); font-size: 1.2rem; cursor: pointer;
+}
+.panel h2 { margin: .1rem 2.5rem .25rem 0; font-size: var(--fs-xl); font-stretch: 85%; font-weight: 800; line-height: 1.1; }
+.panel .kicker { font-size: var(--fs-s); color: var(--ink-soft); }
+.chip { display: inline-block; padding: .2rem .55rem; border-radius: 99px; font-size: var(--fs-xs); font-weight: 700; margin-top: .55rem; }
+.panel section { margin-top: 1.4rem; }
+.panel h3 { margin: 0 0 .5rem; font-size: var(--fs-m); font-weight: 750; }
+.odds { display: flex; justify-content: space-between; align-items: baseline; }
+.odds .side { font-size: var(--fs-xxl); font-weight: 850; font-stretch: 75%; line-height: 1; }
+.odds .side small { display: block; font-size: var(--fs-xs); font-weight: 600; font-stretch: 100%; color: var(--ink-soft); }
+.odds .side.d { color: var(--dem); } .odds .side.r { color: var(--rep); text-align: right; }
+.panel .pbar { height: 14px; }
+
+/* expected vote with its 90% range on a 25-75 axis */
+.range svg { display: block; width: 100%; height: 54px; }
+.range .axis text { fill: var(--ink-soft); font-size: 10px; }
+.range .mid { stroke: var(--ink-soft); stroke-dasharray: 2 3; }
+.range-caption { font-size: var(--fs-s); color: var(--ink-soft); }
+
+/* drivers: what moved this forecast */
+.drivers { list-style: none; padding: 0; margin: 0; display: grid; gap: .8rem; }
+.driver { display: grid; grid-template-columns: 1fr 6.5rem; gap: .2rem .8rem; align-items: center; }
+.driver .label { font-weight: 650; line-height: 1.25; }
+.driver .detail { grid-column: 1; font-size: var(--fs-xs); color: var(--ink-soft); }
+.driver .shift { grid-column: 2; grid-row: 1 / span 2; }
+.shift-bar { position: relative; height: 10px; background: var(--muted-fill); border-radius: 2px; }
+.shift-bar::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1.5px; background: var(--ink-soft); }
+.shift-bar i { position: absolute; top: 0; bottom: 0; border-radius: 2px; }
+.shift-text { font-size: var(--fs-xs); font-weight: 650; margin-top: .25rem; text-align: center; }
+.panel .footnote { font-family: var(--f-text); font-size: var(--fs-s); color: var(--ink-soft); margin-top: 1.25rem; }
+
+/* ---------- generic ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: .5rem; font: inherit; font-weight: 700; font-stretch: 90%;
+  padding: .6rem 1rem; border-radius: var(--radius-s); border: 2px solid var(--desk-navy); background: var(--desk-navy);
+  color: #fff; text-decoration: none; cursor: pointer;
+}
+.btn.ghost { background: var(--card); color: var(--desk-navy); }
+.table-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius-m); }
+table.data { border-collapse: collapse; width: 100%; font-size: var(--fs-s); }
+table.data th, table.data td { text-align: left; padding: .55rem .8rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+table.data th { font-weight: 750; background: #f8f9fd; position: sticky; top: 0; }
+table.data td.num, table.data th.num { text-align: right; }
+.empty { padding: 2rem; text-align: center; color: var(--ink-soft); font-family: var(--f-text); }
+
+@media (max-width: 860px) {
+  .desk { grid-template-columns: 1fr; }
+  .anchor { display: none; }
+  .readouts { grid-template-columns: 1fr; padding: 1.2rem 1.2rem 2rem; gap: 1.4rem; }
+  .readout { border-left: 0; padding: 0; }
+  .readout + .readout { border-top: 1px solid rgba(255, 255, 255, .16); padding-top: 1.2rem; }
+  .peek { right: 12px; transform: scale(.8); transform-origin: bottom right; }
+  .panel { top: auto; height: 78vh; width: 100%; border-left: 0; border-top: 6px solid var(--desk-navy); border-radius: var(--radius-m) var(--radius-m) 0 0; }
+}

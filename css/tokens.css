@@ -1,0 +1,38 @@
+/* Design tokens: every colour, font and size the site uses. Change the look here first. */
+:root {
+  /* the news desk (from the mascot) */
+  --desk-navy: #12194b;        /* suit: desk band, text ink */
+  --desk-navy-2: #2a3264;      /* lapel: secondary navy */
+  --paper: #f3f5fa;            /* page */
+  --card: #ffffff;
+  --dragon-red: #f50a0a;       /* brand + LIVE only, never a party */
+  --spike-gold: #f0a015;       /* highlights, majority marker, ticker rule */
+  --pointer: #b8488f;          /* the pointing stick: selection + keyboard focus */
+  --ink: #12194b;
+  --ink-soft: #4b5277;
+  --rule: #d9dcea;
+  --muted-fill: #e6e8f1;       /* no race here */
+
+  /* parties + rating ramp (safe -> toss-up -> safe) */
+  --dem: #2a5fd3;
+  --rep: #d9472f;
+  --d-safe: #1d48a8; --d-likely: #4f7fe0; --d-lean: #a9c1f2;
+  --tossup: #d6d2e2;
+  --r-lean: #f3b3a3; --r-likely: #e36d55; --r-safe: #ae3320;
+
+  /* type */
+  --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --f-text: "Source Serif 4", Georgia, serif;
+  --fs-xs: 0.78rem; --fs-s: 0.9rem; --fs-m: 1rem; --fs-l: 1.25rem; --fs-xl: 1.6rem; --fs-xxl: 2.6rem; --fs-hero: 3.6rem;
+
+  /* space + shape */
+  --gap: 1rem; --gap-l: 1.75rem; --gap-xl: 2.75rem;
+  --radius-s: 3px; --radius-m: 8px;
+  --page-max: 1240px;
+  --shadow-panel: -12px 0 32px rgba(18, 25, 75, 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion: 0; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

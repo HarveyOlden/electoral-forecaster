@@ -1,0 +1,19 @@
+/* Live results tab */
+.live-head { display: flex; align-items: center; gap: 1.25rem; margin: var(--gap-l) 0 var(--gap); }
+.live-head h1 { margin: 0; font-size: var(--fs-xxl); font-stretch: 85%; font-weight: 800; line-height: 1.05; }
+.live-stamp { margin: .3rem 0 0; color: var(--ink-soft); font-family: var(--f-text); }
+.live-badge {
+  flex: none; display: inline-flex; align-items: center; gap: .55rem; padding: .7rem 1.2rem; border-radius: var(--radius-m);
+  background: var(--dragon-red); color: #fff; font-weight: 900; font-stretch: 110%; font-size: 1.6rem; letter-spacing: .04em;
+  box-shadow: 0 4px 0 #a80000;
+}
+.live-badge .live-dot { background: #fff; width: .8rem; height: .8rem; }
+.live-badge.off { background: var(--muted-fill); color: var(--ink-soft); box-shadow: none; }
+.live-badge.off .live-dot { background: var(--ink-soft); animation: none; }
+.live-explainer {
+  background: var(--card); border: 1px solid var(--rule); border-left: 6px solid var(--spike-gold); border-radius: var(--radius-m);
+  padding: 1rem 1.25rem; max-width: 52rem;
+}
+.live-explainer h2 { margin: 0 0 .35rem; font-size: var(--fs-l); font-stretch: 90%; }
+.live-explainer p { margin: 0; font-family: var(--f-text); line-height: 1.55; }
+@media (max-width: 600px) { .live-head { flex-direction: column; align-items: flex-start; } }

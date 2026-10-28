@@ -1,0 +1,25 @@
+category,dataset,provider,link,used_for
+Election results,County presidential results 2000-2024,MIT Election Data and Science Lab (MEDSL),https://dataverse.harvard.edu/dataverse/medsl_election_returns,Training labels; last-result inputs
+Election results,U.S. House results by district 1976-2024,"MIT Election Data and Science Lab (MEDSL), doi:10.7910/DVN/IG0UN2",https://doi.org/10.7910/DVN/IG0UN2,District labels and history
+Election results,U.S. Senate statewide results 1976-2020,"MEDSL, doi:10.7910/DVN/PEJ5QU",https://doi.org/10.7910/DVN/PEJ5QU,Training labels
+Election results,U.S. President statewide results 1976-2020,"MEDSL, doi:10.7910/DVN/42MVDX",https://doi.org/10.7910/DVN/42MVDX,Training labels
+Election results,"Precinct returns by vote mode 2018, 2022, 2024 (aggregated to county and district)",MEDSL official precinct returns,https://github.com/MEDSL,"County-district links, vote-mode mix, labels"
+Election results,County Senate and governor results,"Algara and Amlani, county-level election returns",https://dataverse.harvard.edu/,Training labels (older years)
+Election results,House special elections 2009-2026,"Wikipedia, U.S. House elections pages (CC BY-SA 4.0)",https://en.wikipedia.org/,Special-election input
+Election night,2020 and 2024 election-night result snapshots,Internet Archive Wayback Machine (CDX API),https://web.archive.org/,Election-night counting training
+Early vote,North Carolina absentee and early-vote files,North Carolina State Board of Elections,https://www.ncsbe.gov/results-data,Early-vote input
+Polls,Historical polls,FiveThirtyEight polls (CC BY 4.0),https://github.com/fivethirtyeight/data,Poll inputs
+Polls,Recent polls,VoteHub polling API (CC BY 4.0),https://votehub.com/,Poll inputs
+Polls,State and generic-ballot polling tables,Wikipedia (CC BY-SA 4.0),https://en.wikipedia.org/,Poll inputs
+Polls,Demographic breakdowns (pre-election wave),"Cooperative Election Study, Kuriwaki cumulative file, doi:10.7910/DVN/II2DB6",https://doi.org/10.7910/DVN/II2DB6,Demographic-poll inputs (training only)
+Polls,2026 published crosstabs,Pew Research Center; Equis Research,https://www.pewresearch.org/,Demographic-poll inputs (2026)
+Fundamentals,Presidential approval,"The American Presidency Project (UCSB), Gallup-based",https://www.presidency.ucsb.edu/,National context
+Fundamentals,Unemployment and inflation,"FRED, Federal Reserve Bank of St. Louis",https://fred.stlouisfed.org/,National context
+Fundamentals,"Election calendar, party control",Hand-entered from public record,,National context
+Candidates,Incumbency and candidate filings,Federal Election Commission bulk files,https://www.fec.gov/data/browse-data/?tab=bulk-data,Incumbency inputs
+Candidates,Pre-general campaign finance reports,Federal Election Commission API,https://api.open.fec.gov/,Money inputs
+Candidates,Governor incumbents,Wikipedia (CC BY-SA 4.0) and hand-entered,https://en.wikipedia.org/,Incumbency inputs
+Demographics,County demographics (ACS 5-year),"U.S. Census Bureau, American Community Survey",https://data.census.gov/,County inputs
+Demographics,Hispanic origin by county (ACS table B03001),U.S. Census Bureau,https://data.census.gov/,County inputs
+Geography,County gazetteer and adjacency,U.S. Census Bureau,https://www.census.gov/geographies.html,Distance and neighbour links
+Geography,State map shapes,"us-atlas (Mike Bostock), from U.S. Census cartographic boundaries (ISC licence)",https://github.com/topojson/us-atlas,Website map
