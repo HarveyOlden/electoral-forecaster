@@ -23,10 +23,11 @@ export const CONFIG = {
 
   mascot: {
     idleFrames: 8,               // assets/mascot/idle_1.png ... idle_8.png (missing frames are skipped)
-    idleFps: 1.5,
+    idleFps: 2.5,                // frames per second while the loop plays
+    idlePauseSeconds: [2, 6],    // random rest on frame 1 between loops
     anchorFacesRight: true,      // mirror the desk dragon so he faces (and points at) the numbers
     peekStates: { normal: "peek_normal.png", winkLeft: "peek_wink_left.png", winkRight: "peek_wink_right.png" },
-    winkEverySeconds: [2.5, 7],  // random gap between winks
+    winkEverySeconds: [2.5, 7],  // random rest with eyes open between winks
   },
 
   // Probability bands for the map colours (chance the Democrat wins).
