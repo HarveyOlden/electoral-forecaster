@@ -4,7 +4,9 @@ import { CONFIG } from "../config.js";
 
 const BASE = "assets/mascot/";
 const M = {                              // defaults, overridden by CONFIG.mascot
-  idleFrames: 8, idleFps: 2.5, idlePauseSeconds: [2, 6], anchorFacesRight: true,
+  idleFrames: 8, anchorFacesRight: true,
+  loopFps: 6,                            // frames per second while moving
+  holdSeconds: [2, 6],                   // random rest on frame 1 and on frame 4
   peekStates: { normal: "peek_normal.png", winkLeft: "peek_wink_left.png", winkRight: "peek_wink_right.png" },
   winkEverySeconds: [3, 8], winkMs: 170,
   ...(CONFIG.mascot || {}),
@@ -80,12 +82,16 @@ export async function anchor(container) {
     maxWidth: "190px", objectFit: "contain", objectPosition: "bottom", transform: M.anchorFacesRight ? "scaleX(-1)" : "" });
   container.append(canvas);
   if (frames.length < 2 || reduced()) return;
-  while (canvas.isConnected) {            // rest on frame 1 for a random while, play the loop once, repeat
-    await wait(between(M.idlePauseSeconds));
-    for (let k = 1; k <= frames.length && canvas.isConnected; k++) {
-      await wait(1000 / M.idleFps);
-      show(k % frames.length);
-    }
+  // rest on 1 -> play 1..4 -> rest on 4 -> play 4..8 and back to 1 -> repeat (each rest a random length)
+  const n = frames.length, mid = Math.min(3, n - 1);
+  const play = async (from, to) => {                 // frame indices, 0-based, wrapping past the last frame
+    for (let k = from + 1; k <= to && canvas.isConnected; k++) { await wait(1000 / M.loopFps); show(k % n); }
+  };
+  while (canvas.isConnected) {
+    await wait(between(M.holdSeconds));
+    await play(0, mid);
+    await wait(between(M.holdSeconds));
+    await play(mid, n);
   }
 }
 
