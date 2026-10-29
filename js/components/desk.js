@@ -34,18 +34,16 @@ function seatHist(ch) {
   return wrap;
 }
 
-function chamberReadout(title, ch, { calledLine, note, toggle } = {}) {
-  const star = note ? el("button", {
-    type: "button", "aria-label": "See note on independents", title: "How independents are counted",
-    style: "background:none;border:0;padding:0 0 0 .1em;margin:0;color:var(--spike-gold);font:inherit;font-size:.7em;vertical-align:super;cursor:pointer;line-height:1",
-    onclick: () => document.getElementById("ind-note")?.scrollIntoView({ behavior: "smooth", block: "center" }),
-  }, "*") : null;
+// Every readout has the same header row and a two-line seats line, so the bars and charts line up across chambers.
+const HEAD = "display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:nowrap;min-height:2.1rem";
+
+function chamberReadout(title, ch, { calledLine, toggle } = {}) {
   return el("div", { class: "readout" },
-    el("h2", {}, title),
-    toggle || null,
-    el("div", { class: "big" }, chance(ch.p_dem_majority), star, el("small", {}, ch._withInd ? "Democratic (incl. independent) chance of control" : "Democratic chance of control")),
+    el("div", { style: HEAD }, el("h2", {}, title), toggle || null),
+    el("div", { class: "big" }, chance(ch.p_dem_majority), el("small", {}, "Democratic chance of control")),
     pbar(ch.p_dem_majority),
-    el("p", { class: "sub" }, `Expected ${ch._withInd ? "Democratic + independent" : "Democratic"} seats: ${ch.dem_seats_mean} (80% range ${ch.dem_seats_lo80}–${ch.dem_seats_hi80})`),
+    el("p", { class: "sub", style: "min-height:2.7em" },
+      `Expected Democratic seats${ch._withInd ? " (incl. independents)" : ""}: ${ch.dem_seats_mean} (80% range ${ch.dem_seats_lo80}–${ch.dem_seats_hi80})`),
     seatHist(ch),
     calledLine ? el("p", { class: "sub" }, calledLine) : null);
 }
@@ -74,7 +72,7 @@ function withIndependents(ch, inds) {
 function governorReadout(g, races) {
   const toss = races.filter((r) => r.p_dem_win > 0.4 && r.p_dem_win < 0.6).length;
   return el("div", { class: "readout" },
-    el("h2", {}, "Governors"),
+    el("div", { style: HEAD }, el("h2", {}, "Governors")),
     el("div", { class: "big" }, `${g.dem_wins_mean}`, el("small", {}, `Expected Democratic wins, of ${g.races_up} races`)),
     el("p", { class: "sub" }, `${toss} ${toss === 1 ? "race is a toss-up" : "races are toss-ups"} (40–60% either way).`));
 }
@@ -83,23 +81,18 @@ export function desk(data, { live = false } = {}) {
   const c = data.chambers;
   const called = (ch) => (live && ch.called ? `Called so far: Democrats ${ch.called.D}, Republicans ${ch.called.R}` : null);
   const inds = (data.races.senate || []).filter((r) => r.independent);
-  const note = inds.length ? el("p", { id: "ind-note", style: "grid-column:1/-1;margin:0;padding:0 1.5rem 1.4rem;color:#e9ecfb;font-size:.95rem;line-height:1.45" },
-    el("span", { style: "color:var(--spike-gold);font-weight:700" }, "* "),
-    `Independents running with no Democrat on the ballot (${inds.map((r) => `${r.independent}, ${r.id}`).join("; ")}) say they won't `
-    + `caucus with either party, so by default they are not counted as Democratic seats. Use the switch above the Senate number to count `
-    + `an independent win towards Democratic control instead.`) : null;
   let countInd = false;
   const senate = () => {
     const ch = countInd ? withIndependents(c.senate, inds) : c.senate;
     const btn = (label, on) => el("button", { type: "button", "aria-pressed": String(countInd === on),
-      style: `padding:.2rem .65rem;border:0;font:inherit;font-size:.8rem;white-space:nowrap;cursor:pointer;${countInd === on ? "background:var(--spike-gold);color:var(--desk-navy);font-weight:700" : "background:transparent;color:#e9ecfb"}`,
+      style: `padding:.15rem .55rem;border:0;font:inherit;font-size:.75rem;white-space:nowrap;cursor:pointer;${countInd === on ? "background:var(--spike-gold);color:var(--desk-navy);font-weight:700" : "background:transparent;color:#e9ecfb"}`,
       onclick: () => { if (countInd !== on) { countInd = on; slot.replaceWith(slot = senate()); } } }, label);
-    const toggle = inds.length ? el("div", { style: "display:flex;align-items:center;gap:.5rem;margin:.1rem 0 .5rem;font-size:.8rem;color:#c9cdea" },
-      "Independents:",
+    const toggle = inds.length ? el("div", { style: "display:flex;align-items:center;gap:.4rem;font-size:.75rem;color:#c9cdea",
+      title: `Independents with no Democrat on the ballot (${inds.map((r) => `${r.independent}, ${r.id}`).join("; ")}) say they won't caucus with either party` },
       el("div", { role: "group", "aria-label": "How to count independents",
         style: "display:inline-flex;border:1.5px solid rgba(255,255,255,.45);border-radius:999px;overflow:hidden" },
-        btn("Separate", false), btn("Count as Dem", true))) : null;
-    return chamberReadout("Senate", ch, { calledLine: called(c.senate), note: !!note, toggle });
+        btn("Ind. separate", false), btn("Ind. as Dem", true))) : null;
+    return chamberReadout("Senate", ch, { calledLine: called(c.senate), toggle });
   };
   let slot = senate();
   const box = el("section", { class: "desk", "aria-label": "Headline forecast" },
@@ -107,8 +100,7 @@ export function desk(data, { live = false } = {}) {
     el("div", { class: "readouts" },
       slot,
       chamberReadout("House", c.house, { calledLine: called(c.house) }),
-      governorReadout(c.governor, data.races.governor),
-      note));
+      governorReadout(c.governor, data.races.governor)));
   anchor(box.querySelector(".anchor"));
   return box;
 }
