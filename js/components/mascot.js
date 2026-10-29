@@ -5,8 +5,17 @@ import { CONFIG } from "../config.js";
 const BASE = "assets/mascot/";
 const M = {                              // defaults, overridden by CONFIG.mascot
   idleFrames: 8, anchorFacesRight: true,
-  loopFps: 16,                            // frames per second while moving
-  holdSeconds: [10, 60],                   // random rest on frame 1 and on frame 4
+  restFrame: 4,                          // eyes open, pointer down: where he sits almost all the time
+  blinkFrame: 1,
+  gestureEverySeconds: [20, 60],         // random gap between little animations
+  firstGestureSeconds: [4, 10],          // first one comes sooner so visitors see he's alive
+  gestures: {                            // steps: [frame, ms]; returns to restFrame afterwards
+    blink:      { weight: 2, steps: [[1, 110]] },
+    doubleBlink:{ weight: 1, steps: [[1, 90], [4, 130], [1, 100]] },
+    point:      { weight: 3, steps: [[8, 900], [3, 110], [8, 650]], thenBlink: 0.3 },   // raise pointer, blink mid-hold
+    wing:       { weight: 2, steps: [[2, 170], [4, 120], [2, 170]] },                  // wing flick
+    shift:      { weight: 2, steps: [[5, 700], [6, 110], [5, 550]], thenBlink: 0.3 },   // weight onto back foot
+  },
   peekStates: { normal: "peek_normal.png", winkLeft: "peek_wink_left.png", winkRight: "peek_wink_right.png" },
   winkEverySeconds: [3, 8], winkMs: 170,
   ...(CONFIG.mascot || {}),
@@ -81,17 +90,31 @@ export async function anchor(container) {
   Object.assign(canvas.style, { position: "absolute", left: "14px", bottom: "0", height: "245px", width: "auto",
     maxWidth: "190px", objectFit: "contain", objectPosition: "bottom", transform: M.anchorFacesRight ? "scaleX(-1)" : "" });
   container.append(canvas);
-  if (frames.length < 2 || reduced()) return;
-  // rest on 1 -> play 1..4 -> rest on 4 -> play 4..8 and back to 1 -> repeat (each rest a random length)
-  const n = frames.length, mid = Math.min(3, n - 1);
-  const play = async (from, to) => {                 // frame indices, 0-based, wrapping past the last frame
-    for (let k = from + 1; k <= to && canvas.isConnected; k++) { await wait(1000 / M.loopFps); show(k % n); }
+  // Frame numbers below are the file numbers (idle_N.png). If some frames are missing, stay still.
+  const rest = M.restFrame - 1;
+  if (!frames[rest] || frames.length < M.idleFrames) { show(0); return; }
+  show(rest);
+  if (reduced()) return;
+  // Mostly still on the rest pose; every 20-60 s one short gesture, picked at random (never the same twice running).
+  // Each step is [frame, ms]; timings get a little jitter so repeats don't look mechanical.
+  const pick = (last) => {
+    const opts = Object.entries(M.gestures).filter(([name]) => name !== last);
+    let r = Math.random() * opts.reduce((s, [, g]) => s + g.weight, 0);
+    for (const [name, g] of opts) { if ((r -= g.weight) <= 0) return [name, g]; }
+    return opts[0];
   };
+  const jitter = (ms) => ms * (0.85 + Math.random() * 0.3);
+  let last = null;
+  await wait(between(M.firstGestureSeconds));
   while (canvas.isConnected) {
-    await wait(between(M.holdSeconds));
-    await play(0, mid);
-    await wait(between(M.holdSeconds));
-    await play(mid, n);
+    const [name, g] = pick(last);
+    last = name;
+    for (const [f, ms] of g.steps) { if (!canvas.isConnected) return; show(f - 1); await wait(jitter(ms)); }
+    show(rest);
+    if (g.thenBlink && Math.random() < g.thenBlink) {   // a blink just after settling reads as "done, relax"
+      await wait(jitter(350)); show(M.blinkFrame - 1); await wait(jitter(110)); show(rest);
+    }
+    await wait(between(M.gestureEverySeconds));
   }
 }
 
