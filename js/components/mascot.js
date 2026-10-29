@@ -5,8 +5,8 @@ import { CONFIG } from "../config.js";
 const BASE = "assets/mascot/";
 const M = {                              // defaults, overridden by CONFIG.mascot
   idleFrames: 8, anchorFacesRight: true,
-  loopFps: 6,                            // frames per second while moving
-  holdSeconds: [2, 6],                   // random rest on frame 1 and on frame 4
+  loopFps: 16,                            // frames per second while moving
+  holdSeconds: [10, 60],                   // random rest on frame 1 and on frame 4
   peekStates: { normal: "peek_normal.png", winkLeft: "peek_wink_left.png", winkRight: "peek_wink_right.png" },
   winkEverySeconds: [3, 8], winkMs: 170,
   ...(CONFIG.mascot || {}),
