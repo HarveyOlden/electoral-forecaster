@@ -60,11 +60,11 @@ export function open(r, chamber, { onClose } = {}) {
     el("button", { class: "panel-close", "aria-label": "Close", onclick: close }, "×"),
     el("div", { class: "kicker" }, `${raceLabel[chamber]} race, 2026`),
     el("h2", { id: "panel-title" }, r.name),
-    el("span", { class: "chip", style: chipStyle }, r.uncontested ? "Uncontested" : rt.label),
+    el("span", { class: "chip", style: chipStyle }, r.note ? "Not modelled" : r.uncontested ? "Uncontested" : rt.label),
     live ? el("p", { class: "kicker" }, r.status === "called" ? `Called for the ${r.called_for === "D" ? "Democrat" : "Republican"}` :
       `${Math.round(r.reported_pct)}% of the expected vote counted`) : null,
     r.uncontested
-      ? el("section", {}, el("p", {}, `Only one major party is on the ballot here, so the seat goes to the ${r.p_dem_win > 0.5 ? "Democrat" : "Republican"}.`))
+      ? el("section", {}, el("p", {}, r.note || `Only one major party is on the ballot here, so the seat goes to the ${r.p_dem_win > 0.5 ? "Democrat" : "Republican"}.`))
       : [
         el("section", {},
           el("h3", {}, "Chance of winning"),

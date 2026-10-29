@@ -178,33 +178,51 @@ def build_outputs(eng, res, draws, drivers, meta, called=None, progress=None):
         else:
             chambers["governor"] = dict(races_up=n_up, dem_wins_mean=round(float(win.mean()), 1),
                                         note="Expected number of governorships Democrats win among the races on the ballot.")
-    # House
-    dd, dm = res["ddraws"], res["dmean"]
+    # House: drop the non-voting DC delegate and stray "at-large" units in multi-district states (artefacts of the
+    # 2024 district file); districts with no county data are added as fixed safe seats (config.HOUSE_FIXED)
+    from collections import Counter
+    n_per = Counter(st for st, _ in eng.dkeys)
+    keep = [k for k, (st, dn) in enumerate(eng.dkeys) if st != "DC" and not (int(dn) == 0 and n_per[st] > 1)]
+    dd, dm = res["ddraws"][:, keep], res["dmean"][keep]
+    keys = [eng.dkeys[k] for k in keep]
     dwin = dd > 0.5
-    for k, (st, dn) in enumerate(eng.dkeys):
-        cf = called.get(f"house|{st}-{dn}")
+    for j, (st, dn) in enumerate(keys):
+        cf = called.get(f"house|{st}-{int(dn)}")
         if cf:
-            dwin[:, k] = cf == "D"
-    seats = dwin.sum(1)
+            dwin[:, j] = cf == "D"
+    fixed_d = sum(1 for did, (party, _) in C.HOUSE_FIXED.items()
+                  if (called.get("house|" + did.split("-")[0] + "-" + str(int(did.split("-")[1]))) or party) == "D")
+    seats = dwin.sum(1) + fixed_d
     dist = pd.Series(seats).value_counts(normalize=True).sort_index()
     chambers["house"] = dict(seats_total=435, majority_at=C.HOUSE_MAJORITY, dem_seats_mean=round(float(seats.mean()), 1),
                              dem_seats_lo80=int(np.percentile(seats, 10)), dem_seats_hi80=int(np.percentile(seats, 90)),
                              p_dem_majority=round(float((seats >= C.HOUSE_MAJORITY).mean()), 4),
                              seat_distribution=[dict(seats=int(k), p=round(float(v), 5)) for k, v in dist.items()],
-                             note=f"Districts modelled: {len(eng.dkeys)}.")
+                             note=f"Districts modelled: {len(keys)}; fixed safe seats: {len(C.HOUSE_FIXED)}.")
     dsi = DS_IDX
     DS = np.asarray(eng.b["inst"]["dist_static"])
-    for k, (st, dn) in enumerate(eng.dkeys):
+    for j, (st, dn) in enumerate(keys):
+        k = keep[j]
+        cf = called.get(f"house|{st}-{int(dn)}")
         did = f"{st}-{int(dn):02d}" if dn else f"{st}-AL"
-        lo, hi = _ci(dd[:, k], 5, 95)
+        lo, hi = _ci(dd[:, j], 5, 95)
         incv = DS[k, dsi["inc"]] if DS[k, dsi["has_inc"]] > 0.5 else 0
         r = dict(id=did, state=st, district=int(dn), name=f"{STATE_NAME.get(st, st)} {int(dn) if dn else 'at-large'}",
-                 p_dem_win=round(float(dwin[:, k].mean()), 4), dem_share=round(float(dm[k]), 4),
+                 p_dem_win=round(float(dwin[:, j].mean()), 4), dem_share=round(float(dm[j]), 4),
                  lo90=round(lo, 4), hi90=round(hi, 4), uncontested=False,
                  incumbent_party="D" if incv > 0.5 else "R" if incv < -0.5 else None,
                  drivers=drivers.get(("house", f"{st}-{int(dn)}"), []))
         if progress:
             pr = progress.get(f"house|{st}-{int(dn)}", {})
+            r.update(reported_pct=pr.get("reported_pct"), status=pr.get("status", "not_started"), called_for=cf)
+        races["house"].append(r)
+    for did, (party, note) in C.HOUSE_FIXED.items():
+        st, dn = did.split("-")[0], int(did.split("-")[1])
+        cf = called.get(f"house|{st}-{dn}")
+        r = dict(id=did, state=st, district=dn, name=f"{STATE_NAME.get(st, st)} {dn}", p_dem_win=1.0 if (cf or party) == "D" else 0.0,
+                 dem_share=None, lo90=None, hi90=None, uncontested=True, note=note, incumbent_party=party, drivers=[])
+        if progress:
+            pr = progress.get(f"house|{st}-{dn}", {})
             r.update(reported_pct=pr.get("reported_pct"), status=pr.get("status", "not_started"), called_for=cf)
         races["house"].append(r)
     return dict(demo=False, model_version=eng.b["version"], generated_at=meta["generated_at"], data_cutoff=meta["data_cutoff"],

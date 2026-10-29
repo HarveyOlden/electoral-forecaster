@@ -28,6 +28,10 @@ STRICT = {"pres": ["poll_sen", "poll_gov"], "sen": ["poll_gov"], "gov": ["poll_s
 SENATE_NOT_UP = {"D": 34, "R": 31}        # seats not on the 2026 ballot (incl. independents who caucus with Democrats)
 SENATE_MAJORITY = 51                      # 50-50 goes to the Republican vice president
 HOUSE_MAJORITY = 218
+HOUSE_FIXED = {   # districts missing from the model's district map (no county data in the 2024 source file): safe seats
+    "FL-20": ("D", "Not modelled (no county data for this district in the source files); a safe Democratic seat."),
+    "OK-03": ("R", "Not modelled (no county data for this district in the source files); a safe Republican seat."),
+}
 NOT_MODELLED = {("sen", "NE"): "Independent Dan Osborn vs Republican Pete Ricketts (no Democrat): counted as not a Democratic seat"}
 
 # --- sanity checks: polls ---
