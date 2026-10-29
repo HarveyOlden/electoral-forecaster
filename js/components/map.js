@@ -53,7 +53,7 @@ export async function drawMap(frame, { chamber, races, onSelect }) {
   }
 
   sel.attr("class", (d) => `unit${byId.has(d.id) ? "" : " none"}`)
-    .attr("fill", (d) => (byId.has(d.id) ? ratingColor(byId.get(d.id).p_dem_win) : null))
+    .attr("fill", (d) => (byId.has(d.id) ? fillFor(byId.get(d.id)) : null))
     .attr("tabindex", (d) => (byId.has(d.id) && chamber !== "house" ? 0 : null))
     .attr("aria-label", (d) => (byId.has(d.id) ? `${byId.get(d.id).name}: ${rating(byId.get(d.id).p_dem_win).label}` : null))
     .on("mousemove", (ev, d) => byId.has(d.id) && tip.show(tipHtml(byId.get(d.id)), ev))
@@ -75,4 +75,12 @@ export function legend() {
   }
   items.push(el("span", {}, el("i", { style: "background:var(--muted-fill)" }), "No race this year"));
   return el("div", { class: "legend", "aria-label": "Map colour key" }, items);
+}
+
+
+// Independents running without a Democrat (e.g. Osborn in Nebraska) are coloured green on their side of the scale.
+const IND = [[0.8, "#1f7a3a"], [0.6, "#4fae6a"], [0.4, "#a8d8b4"]];
+function fillFor(r) {
+  if (r.independent && r.p_dem_win >= 0.4) return (IND.find(([m]) => r.p_dem_win >= m) || IND[2])[1];
+  return ratingColor(r.p_dem_win);
 }

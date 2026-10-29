@@ -148,6 +148,9 @@ def surname(c):
 
 def party_of_header(h, name2party):
     hl = h.lower()
+    for nm, p in name2party.items():             # a name mapped on purpose (independents) wins over the party tag
+        if p == "D" and len(nm) > 2 and re.search(rf"\b{re.escape(nm)}\b", hl) and re.search(r"\(i\)|independent", hl):
+            return p
     if re.search(r"democrat|\(d\)|\(dfl\)|\bdem\.?$", hl):
         return "D"
     if re.search(r"republican|\(r\)|\bgop\b|\brep\.?$", hl):
@@ -322,6 +325,9 @@ def wikipedia_races(up_states, log):
                 continue
             pages += 1
             n2p = name_party_map(tabs)
+            ind = C.INDEPENDENTS.get((race, st))
+            if ind:
+                n2p[surname(ind)] = "D"            # the independent is the non-Republican side of this race
             for head, df in tabs:
                 if re.search(r"primary|runoff|hypothetical", head, re.I) and not re.search(r"general", head, re.I):
                     continue

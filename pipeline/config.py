@@ -32,7 +32,10 @@ HOUSE_FIXED = {   # districts missing from the model's district map (no county d
     "FL-20": ("D", "Not modelled (no county data for this district in the source files); a safe Democratic seat."),
     "OK-03": ("R", "Not modelled (no county data for this district in the source files); a safe Republican seat."),
 }
-NOT_MODELLED = {("sen", "NE"): "Independent Dan Osborn vs Republican Pete Ricketts (no Democrat): counted as not a Democratic seat"}
+NOT_MODELLED = {}
+# Independents running with no Democrat on the ballot: modelled as the non-Republican candidate (their polls are read
+# as the "Democratic" side), shown green on the map, and NOT counted as Democratic seats.
+INDEPENDENTS = {("sen", "NE"): "Dan Osborn", ("sen", "ID"): "Todd Achilles", ("sen", "SD"): "Brian Bengs"}
 
 # --- sanity checks: polls ---
 POLL_MIN_DATE = dt.date(2025, 11, 4)

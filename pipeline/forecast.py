@@ -138,6 +138,7 @@ def build_outputs(eng, res, draws, drivers, meta, called=None, progress=None):
     for race, label in (("sen", "senate"), ("gov", "governor")):
         ri = RACES.index(race)
         win = np.zeros(draws[race].shape[0])
+        ind_win = np.zeros(draws[race].shape[0])
         n_up = 0
         for s, st in enumerate(eng.states):
             if not eng.up[s, ri]:
@@ -154,13 +155,18 @@ def build_outputs(eng, res, draws, drivers, meta, called=None, progress=None):
             else:
                 p = float((d > 0.5).mean())
             dwin = (d > 0.5) if not (nm or cf) else np.full(len(d), p > 0.5)
-            win += dwin
+            ind = C.INDEPENDENTS.get(key)
+            if ind:
+                ind_win = ind_win + dwin if race == "sen" else ind_win
+            else:
+                win += dwin
             lo, hi = _ci(d, 5, 95)
             r = dict(id=st, state=st, name=STATE_NAME.get(st, st), p_dem_win=round(p, 4),
                      dem_share=None if nm else round(float(st_mean[s, ri]), 4),
                      lo90=None if nm else round(lo, 4), hi90=None if nm else round(hi, 4),
                      uncontested=bool(nm), note=nm, incumbent_party=inc.get(f"{race}|{st}"),
-                     candidates=names.get(f"{race}|{st}"), drivers=drivers.get((race, st), []))
+                     candidates=names.get(f"{race}|{st}"), drivers=drivers.get((race, st), []),
+                     independent=C.INDEPENDENTS.get(key))
             if progress:
                 pr = progress.get(f"{race}|{st}", {})
                 r.update(reported_pct=pr.get("reported_pct"), status=pr.get("status", "not_started"), called_for=cf)
@@ -173,8 +179,8 @@ def build_outputs(eng, res, draws, drivers, meta, called=None, progress=None):
                                       dem_seats_lo80=int(np.percentile(seats, 10)), dem_seats_hi80=int(np.percentile(seats, 90)),
                                       p_dem_majority=round(float((seats >= C.SENATE_MAJORITY).mean()), 4),
                                       seat_distribution=[dict(seats=int(k), p=round(float(v), 5)) for k, v in dist.items()],
-                                      not_up=dict(C.SENATE_NOT_UP),
-                                      note="Democrats need 51 seats: a 50-50 Senate is controlled by the Republican vice president.")
+                                      not_up=dict(C.SENATE_NOT_UP), independent_seats_mean=round(float(ind_win.mean()), 2),
+                                      note="Democrats need 51 seats: a 50-50 Senate is controlled by the Republican vice president. Independents without a Democrat on the ballot (green on the map) are not counted as Democratic seats.")
         else:
             chambers["governor"] = dict(races_up=n_up, dem_wins_mean=round(float(win.mean()), 1),
                                         note="Expected number of governorships Democrats win among the races on the ballot.")

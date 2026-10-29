@@ -28,7 +28,7 @@ function rangeChart(r) {
   svg.append("rect").attr("x", x(r.lo90)).attr("width", Math.max(2, x(r.hi90) - x(r.lo90))).attr("y", 12).attr("height", 14)
     .attr("rx", 3).attr("fill", "var(--tossup)");
   svg.append("rect").attr("x", x(r.dem_share) - 2).attr("width", 4).attr("y", 7).attr("height", 24)
-    .attr("fill", r.dem_share >= 0.5 ? "var(--dem)" : "var(--rep)");
+    .attr("fill", r.dem_share >= 0.5 ? (r.independent ? "#1f7a3a" : "var(--dem)") : "var(--rep)");
   const ax = svg.append("g").attr("class", "axis");
   [[0.3, "R +40"], [0.4, "R +20"], [0.5, "Even"], [0.6, "D +20"], [0.7, "D +40"]].forEach(([v, t]) =>
     ax.append("text").attr("x", x(v)).attr("y", 50).attr("text-anchor", "middle").text(t));
@@ -69,13 +69,14 @@ export function open(r, chamber, { onClose } = {}) {
         el("section", {},
           el("h3", {}, "Chance of winning"),
           el("div", { class: "odds" },
-            el("div", { class: "side d" }, chance(r.p_dem_win), el("small", {}, "Democrat")),
+            el("div", { class: "side d", style: r.independent ? "color:#1f7a3a" : null }, chance(r.p_dem_win), el("small", {}, dLabel(r))),
             el("div", { class: "side r" }, chance(1 - r.p_dem_win), el("small", {}, "Republican"))),
-          el("div", { class: "pbar" }, el("span", { class: "d", style: `width:${r.p_dem_win * 100}%` }), el("span", { class: "r" }))),
+          el("div", { class: "pbar" }, el("span", { class: "d", style: `width:${r.p_dem_win * 100}%${r.independent ? ";background:#1f7a3a" : ""}` }), el("span", { class: "r" }))),
+        r.independent ? el("p", { class: "footnote" }, `No Democrat is on the ballot here; the model treats ${r.independent} as the non-Republican candidate. An independent win is not counted as a Democratic seat.`) : null,
         el("section", {},
           el("h3", {}, "Expected vote"),
           el("p", { class: "range-caption" },
-            `Democrat ${pct(r.dem_share, 1)}, Republican ${pct(1 - r.dem_share, 1)} of the two-party vote. 90% of the time the result should land between ${pct(r.lo90, 1)} and ${pct(r.hi90, 1)} for the Democrat.`),
+            `${dLabel(r)} ${pct(r.dem_share, 1)}, Republican ${pct(1 - r.dem_share, 1)} of the two-candidate vote. 90% of the time the result should land between ${pct(r.lo90, 1)} and ${pct(r.hi90, 1)} for the ${r.independent ? "independent" : "Democrat"}.`),
           rangeChart(r)),
         r.drivers?.length ? el("section", {},
           el("h3", {}, "What moved this forecast most"),
@@ -87,4 +88,9 @@ export function open(r, chamber, { onClose } = {}) {
   panel.hidden = false;
   scrim.hidden = false;
   panel.querySelector(".panel-close").focus();
+}
+
+
+function dLabel(r) {
+  return r.independent ? `${r.independent} (independent)` : "Democrat";
 }
