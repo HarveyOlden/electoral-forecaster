@@ -23,3 +23,5 @@ Demographics,County demographics (ACS 5-year),"U.S. Census Bureau, American Comm
 Demographics,Hispanic origin by county (ACS table B03001),U.S. Census Bureau,https://data.census.gov/,County inputs
 Geography,County gazetteer and adjacency,U.S. Census Bureau,https://www.census.gov/geographies.html,Distance and neighbour links
 Geography,State map shapes,"us-atlas (Mike Bostock), from U.S. Census cartographic boundaries (ISC licence)",https://github.com/topojson/us-atlas,Website map
+Election night,"2026 live results (county level, AP data)",The New York Times results feeds,https://www.nytimes.com/interactive/2026/11/03/us/elections/results.html,Live vote counts and race calls
+Polls,2026 Senate and governor polls (refreshed every 12 hours),Wikipedia 2026 race pages (CC BY-SA 4.0),https://en.wikipedia.org/wiki/2026_United_States_Senate_elections,Poll inputs

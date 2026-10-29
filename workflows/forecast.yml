@@ -1,0 +1,57 @@
+name: forecast
+# Pre-election: every 12 hours. Election night: every 30 minutes (times are UTC; 22:07 UTC = 5:07pm ET).
+# Minutes are off the hour on purpose: GitHub delays jobs scheduled at :00 and :30 when it is busy.
+on:
+  schedule:
+    - cron: "23 4,16 * * *"        # ~11:23pm and 11:23am ET, every day until the live window opens
+    - cron: "7,37 22,23 3 11 *"    # Nov 3 from 5:07pm ET
+    - cron: "7,37 * 4 11 *"        # all of Nov 4 (UTC)
+    - cron: "7,37 0-16 5 11 *"     # Nov 5 until ~noon ET
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "auto | pre | live | selftest"
+        default: "auto"
+      force:
+        description: "publish even if the jump check would hold the update"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: forecast
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pipeline/requirements.txt
+      - name: Install
+        run: pip install --quiet -r pipeline/requirements.txt
+      - name: Run
+        run: python pipeline/run.py --mode "${{ inputs.mode || 'auto' }}" ${{ inputs.force && '--force' || '' }}
+      - name: Save the self-test report
+        if: always() && inputs.mode == 'selftest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: selftest
+          path: selftest_result.json
+      - name: Commit the new forecast
+        if: always() && inputs.mode != 'selftest'
+        run: |
+          git config user.name "kermit-bot"
+          git config user.email "kermit-bot@users.noreply.github.com"
+          git add data pipeline/state
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
+          git commit -m "forecast update $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do git pull --rebase --quiet && git push --quiet && exit 0; sleep 5; done
+          exit 1

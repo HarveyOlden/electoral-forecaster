@@ -1,0 +1,3 @@
+Upload the two files written by the Colab export cell here:
+  bundle.pkl.gz
+  model.pt
