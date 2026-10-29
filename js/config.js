@@ -5,8 +5,8 @@ export const CONFIG = {
   dataBase: "data/",
 
   contact: {
-    email: "your.name@gmail.com",                          // <- change
-    linkedin: "https://www.linkedin.com/in/your-profile/",  // <- change
+    email: "harvey.olden@gmail.com",                          // <- change
+    linkedin: "https://www.linkedin.com/in/harvey-jack-olden/",  // <- change
   },
 
   // How often an open page re-checks for new model output (minutes). The live tab polls faster.
