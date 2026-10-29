@@ -130,6 +130,7 @@ export async function peek(container) {
   Object.assign(canvas.style, { position: "absolute", left: "0", top: "0", width: "112px", height: "auto" });
   box.append(canvas);
   container.append(box);
+  hint(container);
   if (reduced() || imgs.length < 2) return;
   const iL = left ? imgs.indexOf(left) : -1, iR = right ? imgs.indexOf(right) : -1;
   await wait(between(M.winkEverySeconds));
@@ -139,4 +140,39 @@ export async function peek(container) {
     show(0);
     await wait(between(M.winkEverySeconds));
   }
+}
+
+
+// Speech bubble next to the peeking head: "Try clicking on a state" until the visitor clicks one (remembered).
+let hintDone = false;
+function hint(container) {
+  try { hintDone = hintDone || localStorage.getItem("kermit-hint-done") === "1"; } catch (e) { /* storage blocked: per visit */ }
+  if (hintDone) return;
+  const narrow = window.matchMedia("(max-width: 860px)").matches;     // .peek is shifted and scaled on small screens
+  const b = document.createElement("div");
+  b.setAttribute("role", "note");
+  b.textContent = "Try clicking on a state";
+  Object.assign(b.style, {
+    position: "absolute", top: narrow ? "-58px" : "-74px", right: narrow ? "108px" : "168px", zIndex: "3",
+    background: "#fff", color: "var(--desk-navy, #14194a)", border: "2px solid var(--desk-navy, #14194a)",
+    borderRadius: "12px", padding: "6px 12px", fontWeight: "600", fontSize: "14px", lineHeight: "1.2", whiteSpace: "nowrap",
+    boxShadow: "0 2px 6px rgba(0,0,0,.15)", pointerEvents: "none", transition: "opacity .3s",
+  });
+  const tail = document.createElement("span");                         // little pointer towards the dragon
+  Object.assign(tail.style, {
+    position: "absolute", right: "-8px", top: "50%", width: "12px", height: "12px", background: "#fff",
+    borderRight: "2px solid var(--desk-navy, #14194a)", borderTop: "2px solid var(--desk-navy, #14194a)",
+    transform: "translateY(-50%) rotate(45deg)",
+  });
+  b.append(tail);
+  container.append(b);
+  const done = (e) => {
+    if (!e.target.closest || !e.target.closest(".unit:not(.none)")) return;
+    hintDone = true;
+    try { localStorage.setItem("kermit-hint-done", "1"); } catch (err) { /* ignore */ }
+    b.style.opacity = "0";
+    setTimeout(() => b.remove(), 300);
+    document.removeEventListener("click", done, true);
+  };
+  document.addEventListener("click", done, true);
 }
