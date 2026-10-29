@@ -20,7 +20,7 @@ NYT_FEEDS = {race: f"https://static01.nyt.com/elections-assets/pages/data/2026-1
              for race, name in (("sen", "senate"), ("house", "house"), ("gov", "governor"))}
 NYT_TEST_FEED = "https://static01.nyt.com/elections-assets/pages/data/2024-11-05/results-senate.json"   # self-test
 NCSBE_ZIP = "https://s3.amazonaws.com/dl.ncsbe.gov/ENRS/2026_11_03/absentee_20261103.zip"
-USER_AGENT = "KERMIT-election-forecast/1.0 (github actions; contact via the site)"
+USER_AGENT = "KERMIT-election-forecast/1.0 (https://harveyolden.github.io/electoral-forecaster/; scheduled GitHub Actions job)"
 
 # --- model ---
 N_DRAWS = 4000                 # joint simulations for seat counts and ranges

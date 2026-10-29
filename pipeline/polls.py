@@ -32,16 +32,21 @@ AGGREGATOR = (r"average|aggregat|realclear|\bRCP\b|fivethirtyeight|\b538\b|270to
               r"silver bulletin|votehub|predictit|polymarket|kalshi")
 
 
-def get(url, tries=3, timeout=60, **kw):
+def get(url, tries=6, timeout=60, **kw):
+    """GET with retries; on 429 (rate limited) waits as long as the server asks (or 10, 20, 40 s ...)."""
     for k in range(tries):
         try:
             r = S.get(url, timeout=timeout, **kw)
+            if r.status_code == 429 and k < tries - 1:
+                wait = float(r.headers.get("Retry-After") or 10 * 2 ** k)
+                time.sleep(min(wait, 120))
+                continue
             r.raise_for_status()
             return r
         except Exception:
             if k == tries - 1:
                 raise
-            time.sleep(3 * (k + 1))
+            time.sleep(5 * (k + 1))
 
 
 # ---------------- parsing helpers (from the pull notebook) ----------------
@@ -178,7 +183,7 @@ def wiki_html(title):
     j = get(C.WIKI_API, params=dict(action="parse", page=title, prop="text", format="json", formatversion=2, redirects=1)).json()
     if "error" in j:
         raise KeyError(title)
-    time.sleep(0.2)
+    time.sleep(1.0)                      # stay well under Wikipedia's rate limit
     return j["parse"]["text"]
 
 

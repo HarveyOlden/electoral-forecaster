@@ -52,10 +52,14 @@ def nc_obs(bundle, log):
     j["u"] = j.fips.map(f2u)
     j = j.dropna(subset=["u", "lean_prev"])
     j = j[(j.D + j.R) >= 10]
-    # checks: counties 100, D share sane, cumulative totals never fall
+    # checks: drop implausible reads (one-sided once 200+ ballots are in); give up only if most of the state is missing
     share = j.D / (j.D + j.R)
-    if j.fips.nunique() < 80 or not share.between(0.02, 0.98).all():
-        log.append(f"NC early vote failed checks ({j.fips.nunique()} counties); kept the bundle's reads")
+    bad = ((j.D + j.R) >= 200) & ~share.between(0.02, 0.98)
+    if bad.any():
+        log.append(f"NC early vote: dropped {int(bad.sum())} implausible county-day reads")
+        j, share = j[~bad], share[~bad]
+    if j.fips.nunique() < 80:
+        log.append(f"NC early vote failed checks (only {j.fips.nunique()} counties); kept the bundle's reads")
         return None
     log.append(f"NC early vote: {int((cur.D + cur.R).groupby(cur.fips).max().sum()):,} party ballots returned, "
                f"{j.fips.nunique()} counties, latest {int(cur.days_out.min())} days out")
