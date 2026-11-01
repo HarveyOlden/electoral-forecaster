@@ -143,6 +143,9 @@ def run_pre(eng, bundle, t, log, force=False, publish=True, with_drivers=True):
     res = eng.run(obs, cutoff, ctx_over=ctx)
     draws = eng.state_draws(res)
     log.append(f"forecast computed in {time.time() - t1:.0f}s")
+    mr = eng.money_report
+    log.append(f"money check: {mr['capped']} capped races cleared; cross-check vs FEC: {mr['reason']}")
+    inputs["money_check"] = mr
     drv = {}
     if with_drivers:
         t1 = time.time()
@@ -194,7 +197,7 @@ def run_live(eng, bundle, t, log, force=False, publish=True):
         progress[k] = dict(reported_pct=r.get("reported_pct"),
                            status="called" if r.get("called_for") else ("counting" if tot > 0 else "not_started"))
     drv = F.drivers(eng, obs, cutoff, res, polls.poll_summary(P), live=True, ctx_over=ctx, live_model=C.LIVE_MODEL)
-    inputs.update(counted_batches=int(len(counts)), live_checks=L["report"], live_model=C.LIVE_MODEL)
+    inputs.update(counted_batches=int(len(counts)), live_checks=L["report"], live_model=C.LIVE_MODEL, money_check=eng.money_report)
     out = F.build_outputs(eng, res, draws, drv, dict(generated_at=iso(now_utc()), data_cutoff=iso(t), inputs=inputs),
                           called=called, progress=progress)
     out.update(is_live=True, updated_at=iso(now_utc()))
@@ -215,11 +218,12 @@ def selftest(log):
     rep = {}
     t0 = time.time()
     b = load_bundle()
+    raw_rs, raw_ds = np.array(b["inst"]["race_static"]), np.array(b["inst"]["dist_static"])   # before money cleaning
     eng = F.Engine(b, MODEL)
     rep["load_s"] = round(time.time() - t0, 1)
     R = b["reference"]
     inst = dict(county=R["county"].astype(np.float32), state=R["state"].astype(np.float32), nation=R["nation"].astype(np.float32),
-                static=b["inst"]["static"], race_static=b["inst"]["race_static"], dist_static=b["inst"]["dist_static"],
+                static=b["inst"]["static"], race_static=raw_rs, dist_static=raw_ds,
                 context=b["inst"]["context"], y=np.full((eng.Cn, 4), np.nan, np.float32), y_cens=np.zeros((eng.Cn, 4), np.float32),
                 y_turnout=np.full(eng.Cn, np.nan, np.float32))
     t1 = time.time()
@@ -257,6 +261,7 @@ def selftest(log):
         rep["headline"] = {ch: dict(dem_seats_mean=out["chambers"][ch]["dem_seats_mean"], p_dem_majority=out["chambers"][ch]["p_dem_majority"])
                            for ch in ("senate", "house")}
         rep["example_race"] = out["races"]["senate"][0]
+    rep["money_check"] = eng.money_report
     rep["verdict"] = ("OK" if rep["model_matches_colab_max_diff"] < 1e-3 and rep["bayes_matches_colab_max_diff"] < 1e-6 and ok
                       else "PROBLEM - read the numbers above")
     return rep

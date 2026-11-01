@@ -17,6 +17,123 @@ GROUP_COLS = {"incumbency": ["inc", "has_inc"],
               "money": ["money_ratio", "coh_ratio", "has_money"]}
 
 
+FEC_WEBALL = "https://www.fec.gov/files/bulk-downloads/2026/weball26.zip"   # FEC "all candidates" summary (no key)
+WEBALL_COLS = ["cand_id", "cand_name", "cand_ici", "pty_cd", "party", "ttl_receipts", "trans_from_auth", "ttl_disb",
+               "trans_to_auth", "coh_bop", "coh_cop", "cand_contrib", "cand_loans", "other_loans", "cand_loan_repay",
+               "other_loan_repay", "debts_owed_by", "ttl_indiv_contrib", "state", "district", "spec_election",
+               "prim_election", "run_election", "gen_election", "gen_election_pct", "other_pol_cmte_contrib",
+               "pol_pty_contrib", "cvg_end_dt", "indiv_refunds", "cmte_refunds"]
+MONEY_TOL = 0.55          # money_ratio units (log ratio / 3): 0.55 = the two sources disagree by more than ~5x
+MONEY_MAX_DROP = 0.25     # removing money from more than 25% of the races that have it = the check itself is suspect
+MONEY_MIN_CORR = 0.6      # the bundle's ratios and the FEC summary's must broadly agree, or the mapping is broken
+
+
+def fec_summary_ratios(log=None):
+    """Independent second source: FEC's own candidate totals. Nominee per party = primary winner if known, else the top
+    fundraiser (same rule as the notebook). Returns {("S", state, 0) | ("H", state, district): money_ratio}."""
+    import io, zipfile, requests
+    r = requests.get(FEC_WEBALL, headers={"User-Agent": C.USER_AGENT}, timeout=120)
+    r.raise_for_status()
+    z = zipfile.ZipFile(io.BytesIO(r.content))
+    d = pd.read_csv(z.open(z.namelist()[0]), sep="|", header=None, names=WEBALL_COLS, dtype=str, encoding="latin-1")
+    d["office"] = d.cand_id.str[0]
+    d = d[d.office.isin(["H", "S"])].copy()
+    d["p"] = d.party.str.upper().map({"DEM": "D", "DFL": "D", "REP": "R"})
+    d = d.dropna(subset=["p"])
+    d["district"] = np.where(d.office == "S", 0, pd.to_numeric(d.district, errors="coerce").fillna(0)).astype(int)
+    d["ttl"] = pd.to_numeric(d.ttl_receipts, errors="coerce").fillna(0)
+    d["won"] = d.prim_election.fillna("").str.upper().eq("W")
+    d = d[d.spec_election.fillna("").str.strip().eq("")]
+    nom = d.sort_values(["won", "ttl"], ascending=False).drop_duplicates(["office", "state", "district", "p"])
+    piv = nom.pivot_table(index=["office", "state", "district"], columns="p", values="ttl", aggfunc="first")
+    piv = piv.dropna(subset=[c for c in ("D", "R") if c in piv]) if {"D", "R"} <= set(piv.columns) else piv.iloc[:0]
+    out = {}
+    for (o, st, dn), row in piv.iterrows():
+        out[(o, st, int(dn))] = float(np.clip(np.log1p(max(row.D, 0)) - np.log1p(max(row.R, 0)), -9, 9) / 3)
+    return out
+
+
+def clean_money(bundle, fetch=fec_summary_ratios):
+    """Money inputs that are clearly broken are set to "unknown" (has_money 0, ratios 0), which the model saw plenty
+    of in training. Two rules:
+      1. a ratio at the clip (one side "raised 8,103x" the other) = a nominee whose receipts were never matched;
+      2. the ratio disagrees by more than ~5x with FEC's own candidate totals (an independent second source).
+    Rule 2 is only applied if the check itself passes its own sanity tests (enough races compared, the two sources
+    broadly agree, and it would not remove money from an implausibly large share of races). Returns a report."""
+    rs = np.array(bundle["inst"]["race_static"], copy=True)
+    ds = np.array(bundle["inst"]["dist_static"], copy=True)
+    w = bundle["world"]
+    states, so = list(w["states"]), np.asarray(w["state_of"])
+    i_mr, i_cr, i_hm = RS_IDX["money_ratio"], RS_IDX["coh_ratio"], RS_IDX["has_money"]
+    j_mr, j_cr, j_hm = DS_IDX["money_ratio"], DS_IDX["coh_ratio"], DS_IDX["has_money"]
+    rep = dict(capped=0, checked=0, disagree=[], applied=False, reason="")
+
+    def zero_rs(mask_c, ri):
+        rs[mask_c, ri, i_mr] = 0; rs[mask_c, ri, i_cr] = 0; rs[mask_c, ri, i_hm] = 0
+
+    def zero_ds(k):
+        ds[k, j_mr] = 0; ds[k, j_cr] = 0; ds[k, j_hm] = 0
+
+    # rule 1 (always): capped ratios
+    cap = (np.abs(rs[..., i_mr]) >= 2.99) | (np.abs(rs[..., i_cr]) >= 2.99)
+    rs[..., i_mr][cap] = 0; rs[..., i_cr][cap] = 0; rs[..., i_hm][cap] = 0
+    capd = (np.abs(ds[:, j_mr]) >= 2.99) | (np.abs(ds[:, j_cr]) >= 2.99) if ds.size else np.zeros(0, bool)
+    for k in np.where(capd)[0]:
+        zero_ds(k)
+    rep["capped"] = int(len({(states[so[c]], r) for c, r in zip(*np.where(cap))}) + capd.sum())
+
+    # rule 2 (guarded): compare every race that still has money with FEC's summary
+    try:
+        fec = fetch()
+    except Exception as e:
+        rep["reason"] = f"FEC summary unavailable ({e}); only the capped rule applied"
+        fec = None
+    if fec is not None:
+        si, hi = RACES.index("sen"), RACES.index("house")
+        pairs, flags = [], []
+        for s, st in enumerate(states):                         # Senate: one value per state
+            m = (so == s) & (rs[:, si, i_hm] > 0.5)
+            if m.any() and ("S", st, 0) in fec:
+                a, b = float(rs[m, si, i_mr][0]), fec[("S", st, 0)]
+                pairs.append((a, b))
+                if abs(a - b) > MONEY_TOL:
+                    flags.append(("sen", st, None, a, b))
+        dm = w.get("dmap")
+        keys = [tuple(k) for k in dm["keys"]] if dm is not None else []
+        for k, (st, dn) in enumerate(keys):                     # House: one value per district
+            if ds.size and ds[k, j_hm] > 0.5 and ("H", st, int(dn)) in fec:
+                a, b = float(ds[k, j_mr]), fec[("H", st, int(dn))]
+                pairs.append((a, b))
+                if abs(a - b) > MONEY_TOL:
+                    flags.append(("house", st, int(dn), a, b))
+        rep["checked"] = len(pairs)
+        corr = float(np.corrcoef(np.array(pairs).T)[0, 1]) if len(pairs) >= 20 else float("nan")
+        share = len(flags) / max(len(pairs), 1)
+        rep.update(corr=round(corr, 3) if np.isfinite(corr) else None, flagged_share=round(share, 3),
+                   disagree=[dict(race=r, state=st, district=dn, bundle_x=round(float(np.exp(abs(a) * 3)), 1) * (1 if a >= 0 else -1),
+                                  fec_x=round(float(np.exp(abs(b) * 3)), 1) * (1 if b >= 0 else -1)) for r, st, dn, a, b in flags])
+        if len(pairs) < 20:
+            rep["reason"] = f"only {len(pairs)} races could be compared: check not trusted, nothing removed"
+        elif not (corr >= MONEY_MIN_CORR):
+            rep["reason"] = f"bundle and FEC ratios barely agree (corr {corr:.2f}): mapping suspect, nothing removed"
+        elif share > MONEY_MAX_DROP:
+            rep["reason"] = f"would remove money from {share:.0%} of races (> {MONEY_MAX_DROP:.0%}): suspect, nothing removed"
+        else:
+            for r, st, dn, a, b in flags:
+                if r == "sen":
+                    s = states.index(st)
+                    zero_rs(so == s, si)
+                else:
+                    k = keys.index((st, dn))
+                    zero_ds(k)
+                    cs = dm["pc"][np.asarray(dm["pd"]) == k]      # counties holding a piece of this district
+                    zero_rs(np.isin(np.arange(len(so)), cs), hi)
+            rep["applied"] = True
+            rep["reason"] = f"removed money from {len(flags)} of {len(pairs)} races (corr {corr:.2f})"
+    bundle["inst"]["race_static"], bundle["inst"]["dist_static"] = rs, ds
+    return rep
+
+
 class Engine:
     def __init__(self, bundle, model_path):
         self.b = bundle
@@ -39,6 +156,8 @@ class Engine:
         self.up = np.asarray(bundle["up"])
         self.dkeys = [tuple(k) for k in w.dmap["keys"]] if w.dmap is not None else []
         self.fit, self.coefs = bundle["bayes"]["fit"], bundle["bayes"]["coefs"]
+        self.money_report = clean_money(bundle)
+
 
     # ---------- one instance ----------
     def instance(self, obs, cutoff, ctx_over=None, rs_zero=(), ds_zero=()):
@@ -180,6 +299,8 @@ def build_outputs(eng, res, draws, drivers, meta, called=None, progress=None):
                                       p_dem_majority=round(float((seats >= C.SENATE_MAJORITY).mean()), 4),
                                       seat_distribution=[dict(seats=int(k), p=round(float(v), 5)) for k, v in dist.items()],
                                       not_up=dict(C.SENATE_NOT_UP), independent_seats_mean=round(float(ind_win.mean()), 2),
+                                      with_independents=dict(p_dem_majority=round(float((seats + ind_win >= C.SENATE_MAJORITY).mean()), 4),
+                                                             dem_seats_mean=round(float((seats + ind_win).mean()), 1)),
                                       note="Democrats need 51 seats: a 50-50 Senate is controlled by the Republican vice president. Independents without a Democrat on the ballot (green on the map) are not counted as Democratic seats.")
         else:
             chambers["governor"] = dict(races_up=n_up, dem_wins_mean=round(float(win.mean()), 1),
