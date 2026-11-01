@@ -25,6 +25,7 @@ WEBALL_COLS = ["cand_id", "cand_name", "cand_ici", "pty_cd", "party", "ttl_recei
                "pol_pty_contrib", "cvg_end_dt", "indiv_refunds", "cmte_refunds"]
 MONEY_TOL = 0.55          # money_ratio units (log ratio / 3): 0.55 = the two sources disagree by more than ~5x
 MONEY_MAX_DROP = 0.25     # removing money from more than 25% of the races that have it = the check itself is suspect
+MONEY_SERIOUS = 1e5       # both parties have a $100k+ fundraiser -> a capped "8,103x" ratio there is an unmatched nominee
 MONEY_MIN_CORR = 0.6      # the bundle's ratios and the FEC summary's must broadly agree, or the mapping is broken
 
 
@@ -57,6 +58,12 @@ def fec_summary_ratios(log=None):
     out = {}
     for (o, st, dn), row in piv.iterrows():
         out[(o, st, int(dn))] = float(np.clip(np.log1p(max(row.D, 0)) - np.log1p(max(row.R, 0)), -9, 9) / 3)
+    # "floor": the smaller of the two parties' top fundraisers, whoever the nominee is. If both parties have someone
+    # who raised $100k+, a "raised 8,103x" ratio can't be real, even when the nominee pick itself is ambiguous.
+    top = d.groupby(["office", "state", "district", "p"]).ttl.max().unstack("p")
+    if {"D", "R"} <= set(top.columns):
+        for (o, st, dn), row in top[["D", "R"]].dropna().iterrows():
+            out[("floor", o, st, int(dn))] = float(min(row.D, row.R))
     return out
 
 
@@ -106,28 +113,39 @@ def clean_money(bundle, fetch=fec_summary_ratios):
             rep["reason"] = f"FEC summary unavailable ({e}); {rep['capped']} capped ratios is too many to clear blindly, nothing removed"
     if fec is not None:
         si, hi = RACES.index("sen"), RACES.index("house")
-        pairs, flags = [], []
+        pairs, flags, n_floor = [], [], 0
         for s, st in enumerate(states):                         # Senate: one value per state
             m = (so == s) & (rs[:, si, i_hm] > 0.5)
-            if m.any() and ("S", st, 0) in fec and ("sen", st) not in C.INDEPENDENTS:   # FEC "D" isn't the independent
-                a, b = float(rs[m, si, i_mr][0]), fec[("S", st, 0)]
+            if not m.any() or ("sen", st) in C.INDEPENDENTS:    # FEC "D" isn't the independent
+                continue
+            a = float(rs[m, si, i_mr][0])
+            if ("S", st, 0) in fec:
+                b = fec[("S", st, 0)]
                 pairs.append((a, b))
                 if abs(a - b) > MONEY_TOL:
                     flags.append(("sen", st, None, a, b))
+            elif abs(a) >= 2.99 and fec.get(("floor", "S", st, 0), 0) >= MONEY_SERIOUS:
+                flags.append(("sen", st, None, a, None)); n_floor += 1
         dm = w.get("dmap")
         keys = [tuple(k) for k in dm["keys"]] if dm is not None else []
         for k, (st, dn) in enumerate(keys):                     # House: one value per district
-            if ds.size and ds[k, j_hm] > 0.5 and ("H", st, int(dn)) in fec:
-                a, b = float(ds[k, j_mr]), fec[("H", st, int(dn))]
+            if not (ds.size and ds[k, j_hm] > 0.5):
+                continue
+            a = float(ds[k, j_mr])
+            if ("H", st, int(dn)) in fec:
+                b = fec[("H", st, int(dn))]
                 pairs.append((a, b))
                 if abs(a - b) > MONEY_TOL:
                     flags.append(("house", st, int(dn), a, b))
+            elif abs(a) >= 2.99 and fec.get(("floor", "H", st, int(dn)), 0) >= MONEY_SERIOUS:
+                flags.append(("house", st, int(dn), a, None)); n_floor += 1
         rep["checked"] = len(pairs)
         corr = float(np.corrcoef(np.array(pairs).T)[0, 1]) if len(pairs) >= 20 else float("nan")
-        share = len(flags) / max(len(pairs), 1)
+        share = len(flags) / max(len(pairs) + n_floor, 1)
         rep.update(corr=round(corr, 3) if np.isfinite(corr) else None, flagged_share=round(share, 3),
                    disagree=[dict(race=r, state=st, district=dn, bundle_x=round(float(np.exp(abs(a) * 3)), 1) * (1 if a >= 0 else -1),
-                                  fec_x=round(float(np.exp(abs(b) * 3)), 1) * (1 if b >= 0 else -1)) for r, st, dn, a, b in flags])
+                                  fec_x=(round(float(np.exp(abs(b) * 3)), 1) * (1 if b >= 0 else -1)) if b is not None
+                                  else "both parties raised $100k+") for r, st, dn, a, b in flags])
         if len(pairs) < 20:
             rep["reason"] = f"only {len(pairs)} races could be compared: check not trusted, nothing removed"
         elif not (corr >= MONEY_MIN_CORR):
