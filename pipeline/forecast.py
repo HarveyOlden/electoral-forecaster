@@ -44,7 +44,14 @@ def fec_summary_ratios(log=None):
     d["ttl"] = pd.to_numeric(d.ttl_receipts, errors="coerce").fillna(0)
     d["won"] = d.prim_election.fillna("").str.upper().eq("W")
     d = d[d.spec_election.fillna("").str.strip().eq("")]
-    nom = d.sort_values(["won", "ttl"], ascending=False).drop_duplicates(["office", "state", "district", "p"])
+    d = d.sort_values(["won", "ttl"], ascending=False)
+    # only trust the nominee pick when it is unambiguous: FEC flagged a primary winner, or the top fundraiser raised
+    # 3x+ the party's runner-up. Otherwise (runoffs, unflagged primaries: e.g. Texas R) FEC may compare the wrong pair.
+    g = d.groupby(["office", "state", "district", "p"])
+    second = g.ttl.transform(lambda s: s.iloc[1] if len(s) > 1 else 0.0)
+    d["sure"] = d.won | (d.ttl >= 3 * second)
+    nom = d.drop_duplicates(["office", "state", "district", "p"])
+    nom = nom[nom.sure]
     piv = nom.pivot_table(index=["office", "state", "district"], columns="p", values="ttl", aggfunc="first")
     piv = piv.dropna(subset=[c for c in ("D", "R") if c in piv]) if {"D", "R"} <= set(piv.columns) else piv.iloc[:0]
     out = {}
@@ -55,11 +62,12 @@ def fec_summary_ratios(log=None):
 
 def clean_money(bundle, fetch=fec_summary_ratios):
     """Money inputs that are clearly broken are set to "unknown" (has_money 0, ratios 0), which the model saw plenty
-    of in training. Two rules:
-      1. a ratio at the clip (one side "raised 8,103x" the other) = a nominee whose receipts were never matched;
-      2. the ratio disagrees by more than ~5x with FEC's own candidate totals (an independent second source).
-    Rule 2 is only applied if the check itself passes its own sanity tests (enough races compared, the two sources
-    broadly agree, and it would not remove money from an implausibly large share of races). Returns a report."""
+    of in training. Every race with money is compared with FEC's own candidate totals (an independent second source);
+    where they disagree by more than ~5x, the race's money is cleared. This is only applied if the check passes its
+    own sanity tests (enough races compared, the two sources broadly agree, and it would not remove money from an
+    implausibly large share of races). A ratio at the clip ("raised 8,103x") is NOT cleared on its own: most are real
+    (a safe seat whose challenger raised ~nothing, exactly as in training); the FEC check separates real from unmatched.
+    Only if FEC is unreachable are capped ratios cleared instead, under the same share guard. Returns a report."""
     rs = np.array(bundle["inst"]["race_static"], copy=True)
     ds = np.array(bundle["inst"]["dist_static"], copy=True)
     w = bundle["world"]
@@ -74,26 +82,34 @@ def clean_money(bundle, fetch=fec_summary_ratios):
     def zero_ds(k):
         ds[k, j_mr] = 0; ds[k, j_cr] = 0; ds[k, j_hm] = 0
 
-    # rule 1 (always): capped ratios
+    # capped ratios: recorded here, only cleared directly if FEC is unreachable (below)
     cap = (np.abs(rs[..., i_mr]) >= 2.99) | (np.abs(rs[..., i_cr]) >= 2.99)
-    rs[..., i_mr][cap] = 0; rs[..., i_cr][cap] = 0; rs[..., i_hm][cap] = 0
     capd = (np.abs(ds[:, j_mr]) >= 2.99) | (np.abs(ds[:, j_cr]) >= 2.99) if ds.size else np.zeros(0, bool)
-    for k in np.where(capd)[0]:
-        zero_ds(k)
     rep["capped"] = int(len({(states[so[c]], r) for c, r in zip(*np.where(cap))}) + capd.sum())
+    dk = [tuple(k) for k in w["dmap"]["keys"]] if w.get("dmap") is not None else []
+    rep["capped_races"] = sorted({f"{RACES[r]} {states[so[c]]}" for c, r in zip(*np.where(cap)) if RACES[r] != "house"}
+                                 | {f"house {dk[k][0]}-{int(dk[k][1])}" for k in np.where(capd)[0] if k < len(dk)})
 
     # rule 2 (guarded): compare every race that still has money with FEC's summary
     try:
         fec = fetch()
     except Exception as e:
-        rep["reason"] = f"FEC summary unavailable ({e}); only the capped rule applied"
         fec = None
+        n_money = int(len({(states[so[c]], r) for c, r in zip(*np.where(rs[..., i_hm] > 0.5))}) + (ds[:, j_hm] > 0.5).sum())
+        if rep["capped"] <= MONEY_MAX_DROP * max(n_money, 1):
+            rs[..., i_mr][cap] = 0; rs[..., i_cr][cap] = 0; rs[..., i_hm][cap] = 0
+            for k in np.where(capd)[0]:
+                zero_ds(k)
+            rep["applied"] = True
+            rep["reason"] = f"FEC summary unavailable ({e}); cleared {rep['capped']} capped ratios instead"
+        else:
+            rep["reason"] = f"FEC summary unavailable ({e}); {rep['capped']} capped ratios is too many to clear blindly, nothing removed"
     if fec is not None:
         si, hi = RACES.index("sen"), RACES.index("house")
         pairs, flags = [], []
         for s, st in enumerate(states):                         # Senate: one value per state
             m = (so == s) & (rs[:, si, i_hm] > 0.5)
-            if m.any() and ("S", st, 0) in fec:
+            if m.any() and ("S", st, 0) in fec and ("sen", st) not in C.INDEPENDENTS:   # FEC "D" isn't the independent
                 a, b = float(rs[m, si, i_mr][0]), fec[("S", st, 0)]
                 pairs.append((a, b))
                 if abs(a - b) > MONEY_TOL:
