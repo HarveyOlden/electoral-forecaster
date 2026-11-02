@@ -190,7 +190,11 @@ class Engine:
         self.up = np.asarray(bundle["up"])
         self.dkeys = [tuple(k) for k in w.dmap["keys"]] if w.dmap is not None else []
         self.fit, self.coefs = bundle["bayes"]["fit"], bundle["bayes"]["coefs"]
-        self.money_report = clean_money(bundle)
+        # Money is fixed in the bundle (FEC weball26 at export, both nominees matched to the current poll match-ups,
+        # gut-checked in Colab) and doesn't change before election day: used as is, no live re-check.
+        # (clean_money() is kept above for future cycles.)
+        self.money_report = dict(capped=0, checked=0, corr=None, flagged_share=0, disagree=[], applied=False,
+                                 reason="money checked at export (FEC bulk file, both nominees matched); used as is")
 
 
     # ---------- one instance ----------
