@@ -137,7 +137,7 @@ def gather_obs(bundle, today, log, live=False):
 def run_pre(eng, bundle, t, log, force=False, publish=True, with_drivers=True):
     import polls, forecast as F
     obs, P, approval, inputs = gather_obs(bundle, t.date(), log)
-    cutoff = hours_since_t0(t)
+    cutoff = min(hours_since_t0(t), getattr(C, "PRE_CLOCK_MAX_H", 1e9))
     ctx = dict(approval=approval)
     t1 = time.time()
     res = eng.run(obs, cutoff, ctx_over=ctx)
@@ -290,6 +290,10 @@ def main():
                 mode = "live"
             elif t > C.LIVE_END_UTC:
                 log.append("after the live window: nothing to do")
+                print("\n".join(log))
+                return 0
+            elif getattr(C, "FREEZE_PRE", False):
+                log.append("pre-election forecast is locked (FREEZE_PRE): nothing to do until the live window")
                 print("\n".join(log))
                 return 0
             else:
