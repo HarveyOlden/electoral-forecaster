@@ -1,0 +1,54 @@
+source,race,year,state,district,pollster,start_date,end_date,sample_size,population,dem_pct,rep_pct,dem_name,rep_name
+manual_oct2026,generic,2026,US,,Reuters/Ipsos,2026-10-29,2026-11-01,1212.0,lv,52.0,44.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Financial Times/Focaldata,2026-10-29,2026-11-01,2090.0,lv,52.0,45.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Morning Consult,2026-10-29,2026-11-01,16929.0,lv,51.0,43.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Economist/YouGov,2026-10-27,2026-10-30,3915.0,lv,53.0,44.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Big Data Poll,2026-10-27,2026-10-30,3214.0,lv,52.0,40.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,ActiVote,2026-10-27,2026-10-30,2000.0,lv,53.5,46.5,Democrats,Republicans
+manual_oct2026,generic,2026,US,,NBC News,2026-10-27,2026-10-30,1000.0,rv,52.0,45.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,TIPP Insights,2026-10-26,2026-10-29,1158.0,lv,54.0,41.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Rasmussen Reports,2026-10-25,2026-10-28,1442.0,lv,49.0,43.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Reuters/Ipsos,2026-10-25,2026-10-28,1209.0,lv,50.0,44.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Tufts University/YouGov,2026-10-24,2026-10-27,499.0,lv,52.0,40.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Emerson College,2026-10-23,2026-10-26,1000.0,lv,52.0,42.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Economist/YouGov,2026-10-23,2026-10-26,1263.0,lv,50.0,41.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Reuters/Ipsos,2026-10-23,2026-10-26,1164.0,lv,53.0,44.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,NPR/PBS/Marist,2026-10-22,2026-10-25,,lv,52.0,44.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Cygnal,2026-10-21,2026-10-24,1500.0,lv,52.0,43.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,CBS News/YouGov,2026-10-20,2026-10-23,1749.0,lv,53.0,45.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Rasmussen Reports,2026-10-18,2026-10-21,1755.0,lv,48.0,43.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,ActiVote,2026-10-18,2026-10-21,1000.0,lv,53.7,46.3,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Financial Times/Focaldata,2026-10-17,2026-10-20,1594.0,lv,53.0,44.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Economist/YouGov,2026-10-17,2026-10-20,1312.0,lv,50.0,43.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,New York Times/Siena,2026-10-16,2026-10-19,3494.0,lv,52.0,41.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Echelon Insights,2026-10-16,2026-10-19,1010.0,lv,50.0,45.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,CNBC,2026-10-16,2026-10-19,1000.0,rv,52.0,45.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Reuters/Ipsos,2026-10-16,2026-10-19,1269.0,rv,47.0,35.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Morning Consult,2026-10-15,2026-10-18,17706.0,lv,50.0,43.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,CNN/SSRS,2026-10-15,2026-10-18,1206.0,rv,49.0,39.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,ActiVote,2026-10-11,2026-10-14,1000.0,lv,53.3,46.7,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Rasmussen Reports,2026-10-11,2026-10-14,1789.0,lv,48.0,44.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,ABC/Washington Post/Ipsos,2026-10-10,2026-10-13,2032.0,lv,52.0,44.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,RMG Research,2026-10-10,2026-10-13,,lv,54.0,43.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Economist/YouGov,2026-10-09,2026-10-12,1176.0,lv,49.0,41.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,AP/NORC,2026-10-09,2026-10-12,925.0,rv,47.0,38.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Fox News,2026-10-09,2026-10-12,1202.0,rv,54.0,45.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Cygnal,2026-10-07,2026-10-10,1500.0,lv,51.0,42.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,NewsNation,2026-10-06,2026-10-09,974.0,lv,49.0,42.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Rasmussen Reports,2026-10-04,2026-10-07,1781.0,lv,49.0,44.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Center Square/Noble Predictive,2026-10-04,2026-10-07,2527.0,rv,47.0,42.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,TIPP Insights,2026-10-03,2026-10-06,780.0,lv,54.0,42.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Financial Times/Focaldata,2026-10-03,2026-10-06,2275.0,lv,52.0,44.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Economist/YouGov,2026-10-02,2026-10-05,1173.0,lv,51.0,40.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Reuters/Ipsos,2026-10-02,2026-10-05,3526.0,rv,44.0,37.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,AtlasIntel,2026-10-29,2026-11-01,3566.0,a,55.5,41.4,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Harvard CAPS/Harris,2026-10-23,2026-10-26,,lv,52.0,48.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Leger,2026-10-22,2026-10-25,1037.0,a,42.0,36.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Echelon Insights,2026-10-20,2026-10-23,3644.0,lv,51.0,46.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,The Argument/Verasight,2026-10-20,2026-10-23,,lv,52.0,41.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Prolific,2026-10-19,2026-10-22,1518.0,a,52.6,41.9,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Targoz Market Research,2026-10-19,2026-10-22,1118.0,lv,49.0,46.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Clarity Campaign Labs,2026-10-18,2026-10-21,1016.0,lv,52.0,44.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Penn State/YouGov,2026-10-17,2026-10-20,724.0,lv,47.0,43.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,Rainey Center,2026-10-17,2026-10-20,1279.0,rv,52.0,44.0,Democrats,Republicans
+manual_oct2026,generic,2026,US,,ActiVote,2026-09-30,2026-10-03,1000.0,lv,52.2,47.8,Democrats,Republicans

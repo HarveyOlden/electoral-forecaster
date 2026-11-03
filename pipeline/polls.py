@@ -1,7 +1,7 @@
 """Polls for the 2026 forecast: VoteHub (generic ballot, approval) + Wikipedia race pages (Senate, governor), merged
 with the polls already in the bundle, checked, and turned into the model's observations exactly like the notebook's
 poll_obs(). Parsing helpers are copied from the extra-data pull notebook (c1/c3), which built the training polls."""
-import io, re, time, calendar, datetime as dt
+import io, os, re, time, calendar, datetime as dt
 import numpy as np
 import pandas as pd
 import requests
@@ -416,6 +416,11 @@ def gather(bundle, today, log):
     if "hypothetical" in B:
         B = B[~B.hypothetical.astype(str).str.lower().isin(["true", "1"])]
     parts.append(B.reindex(columns=TIDY_COLS))
+    extra = os.path.join(os.path.dirname(os.path.abspath(__file__)), "polls_extra.csv")
+    if os.path.exists(extra):                    # hand-collected polls the feeds missed (Oct 2026 generic ballot)
+        X = pd.read_csv(extra)
+        parts.append(X.reindex(columns=TIDY_COLS))
+        log.append(f"extra polls file: {len(X)} rows ({X.groupby('race').size().to_dict()})")
     fresh = {}
     for name, fn in (("votehub generic ballot", votehub_generic), ("wikipedia races", lambda: wikipedia_races(up_states, log))):
         try:
