@@ -419,6 +419,8 @@ def gather(bundle, today, log):
     extra = os.path.join(os.path.dirname(os.path.abspath(__file__)), "polls_extra.csv")
     if os.path.exists(extra):                    # hand-collected polls the feeds missed (Oct 2026 generic ballot)
         X = pd.read_csv(extra)
+        for c in ("start_date", "end_date"):         # real dates, like the other sources (mixed text/dates -> "no date")
+            X[c] = pd.to_datetime(X[c], errors="coerce")
         parts.append(X.reindex(columns=TIDY_COLS))
         log.append(f"extra polls file: {len(X)} rows ({X.groupby('race').size().to_dict()})")
     fresh = {}
