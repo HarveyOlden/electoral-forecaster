@@ -55,3 +55,7 @@ LIVE_MAX_COUNTY_RATIO = 1.6    # counted votes > 1.6 x the county's expected mid
 MIDTERM_TURNOUT = 0.72         # expected midterm votes = presidential-year expectation x this
 LIVE_MIN_GOOD_SHARE = 0.6      # fewer than 60% of reporting counties pass the checks -> skip this live update
 LIVE_MAX_DROP = 0.02           # a county's count may fall by 2% (corrections); more -> that county is ignored this run
+
+# Election day: the pre-election forecast is locked at the night-before run (Nov 2, 23:44 UTC).
+FREEZE_PRE = True          # auto mode never runs a pre-election update again (live mode is unaffected)
+PRE_CLOCK_MAX_H = -5.0     # a manual "pre" run still uses the clock of last night (never election day)
